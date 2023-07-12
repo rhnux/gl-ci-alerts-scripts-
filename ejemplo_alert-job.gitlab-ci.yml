@@ -1,0 +1,40 @@
+.alert-job:
+  image:
+    name: registry.gitlab.com/python-gitlab/python-gitlab:latest
+    entrypoint:
+    - '/usr/bin/env'
+    - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  variables:
+    TEMPLATE_BRANCH: 'develop'
+    CMD_SCRIPT: ''
+    SEVERITY: ''
+    DESC: ''
+    TITLE: ''
+    TOOL: ''
+    JOB_NAME: ''
+    ALERT_SCRIPT_URL: ''
+    REPORT_NAME: ''
+    LABEL: ''
+    HELP_URL: ''
+    ASVS_LEVEL: ''
+  before_script: []
+  script: 
+   - gitlab --version
+   - apk add curl
+   - python -m venv .venv
+   - source .venv/bin/activate
+   - pip install --upgrade pip
+   - pip install markdown pymsteams python-gitlab
+   - >
+      curl --header "PRIVATE-TOKEN:$CI_TEMPLATES_SEGINF_REPO" 
+      https://gitlab.com/api/v4/projects/XXXXXXXX/repository/files/scripts%2Fgl_create_alert.py/raw?ref=$TEMPLATE_BRANCH > 
+      gl_create_alert.py
+   - chmod a+x gl_create_alert.py
+   - python gl_create_alert.py -v
+   - echo $CMD_SCRIPT
+
+## tests
+.job-error-test:
+  script:
+    - false || exit_code=$?
+    - if [ $exit_code -ne 0 ]; then echo "Previous command failed"; fi;
